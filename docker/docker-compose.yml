@@ -5,6 +5,7 @@ services:
     image: wurstmeister/zookeeper
     ports:
       - "2181:2181"
+    restart: unless-stopped
 
   kafka:
     image: wurstmeister/kafka
@@ -18,6 +19,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+    restart: unless-stopped
 
   db:
     image: postgres:13
@@ -30,11 +32,14 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ../db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: unless-stopped
 
   producer:
     build:
       context: ..
-      dockerfile: docker/Dockerfile-producer  # ✅ Use separate Python Dockerfile
+      dockerfile: docker/Dockerfile-producer
+    volumes:
+      - ../kafka:/app/kafka
     command: ["python", "/app/kafka/producer.py"]
     depends_on:
       - kafka
@@ -45,7 +50,14 @@ services:
       dockerfile: docker/Dockerfile-spark
     volumes:
       - ../spark:/app/spark
-    command: ["spark-submit", "/app/spark/stream_etl.py"]
+      - ../kafka:/app/kafka
+    command:
+      [
+        "spark-submit",
+        "--packages",
+        "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.2",
+        "/app/spark/stream_etl.py"
+      ]
     depends_on:
       - kafka
       - db
@@ -58,7 +70,7 @@ services:
       - "8501:8501"
     volumes:
       - ../dashboard:/app/dashboard
-    command: ["streamlit", "run", "/app/dashboard/streamlit_app.py"]
+    command: ["streamlit", "run", "/app/dashboard/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
     depends_on:
       - db
 

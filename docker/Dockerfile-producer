@@ -1,7 +1,23 @@
+# Use official Python slim image for smaller size
 FROM python:3.9-slim
 
 WORKDIR /app
-COPY kafka/ ./kafka/
-RUN pip install kafka-python requests
 
-CMD ["python", "kafka/producer.py"]
+# Install dependencies (add any extras you need)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements if you have a requirements.txt (optional)
+# COPY requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt
+
+# Or install kafka-python and requests directly
+RUN pip install --no-cache-dir kafka-python requests
+
+# Copy the producer code
+COPY ./kafka /app/kafka
+
+WORKDIR /app/kafka
+
+CMD ["python", "producer.py"]

@@ -4,21 +4,17 @@ import time
 from datetime import datetime
 from kafka import KafkaProducer
 
-# Kafka configuration
-KAFKA_BROKER = 'kafka:9092'  # Use 'localhost:9092' if testing locally
+KAFKA_BROKER = 'kafka:9092'
 TOPIC = 'crypto-stream'
 
-# Asset mapping
 ASSETS = {
     "bitcoin": 0,
     "ethereum": 1,
     "cardano": 2
 }
 
-# API Endpoint
 API_URL = "https://api.coingecko.com/api/v3/simple/price"
 
-# Kafka producer setup
 producer = KafkaProducer(
     bootstrap_servers=KAFKA_BROKER,
     value_serializer=lambda v: json.dumps(v).encode("utf-8")
@@ -55,21 +51,25 @@ def fetch_and_send():
 
         for coin, data in prices.items():
             try:
+                timestamp_unix = data.get("last_updated_at")
+                timestamp_iso = datetime.utcfromtimestamp(timestamp_unix).isoformat() if timestamp_unix else None
+
                 message = {
                     "id": coin,
                     "symbol": coin[:3],
                     "price": data.get("usd"),
                     "volume": data.get("usd_24h_vol"),
-                    "timestamp": datetime.utcfromtimestamp(data.get("last_updated_at")).isoformat()
+                    "timestamp": timestamp_iso
                 }
 
                 producer.send(TOPIC, value=message)
+                producer.flush()  # Ensure the message is sent immediately
                 print(f"✅ Sent to Kafka: {message['id'].upper()} | Price: ${message['price']}")
 
             except Exception as e:
-                print(f"❌ Kafka error: {e}")
+                print(f"❌ Kafka error while sending {coin}: {e}")
 
-        time.sleep(10)  # Respect CoinGecko's free plan rate limit
+        time.sleep(10)
 
 if __name__ == "__main__":
     print("🚀 Kafka Producer started...")
