@@ -33,7 +33,7 @@ services:
   producer:
     build:
       context: ..
-      dockerfile: docker/Dockerfile-spark  # Reuse Spark Dockerfile for Python + Kafka
+      dockerfile: docker/Dockerfile-producer  # ✅ Use separate Python Dockerfile
     command: ["python", "/app/kafka/producer.py"]
     depends_on:
       - kafka
