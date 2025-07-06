@@ -1,6 +1,5 @@
--- schema.sql (recommended)
 CREATE TABLE IF NOT EXISTS prices (
-    id TEXT PRIMARY KEY,
+    id TEXT,
     symbol TEXT,
     price DOUBLE PRECISION,
     volume DOUBLE PRECISION,
