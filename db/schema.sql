@@ -1,6 +1,6 @@
--- Create the PostgreSQL table to store crypto streaming data
+-- schema.sql (recommended)
 CREATE TABLE IF NOT EXISTS prices (
-    id TEXT,
+    id TEXT PRIMARY KEY,
     symbol TEXT,
     price DOUBLE PRECISION,
     volume DOUBLE PRECISION,
