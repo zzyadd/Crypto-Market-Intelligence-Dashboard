@@ -1,0 +1,20 @@
+# Base image with Java (for Spark + Kafka)
+FROM bitnami/spark:3.3.2
+
+# Switch to root for installing
+USER root
+
+# Install pip and Python packages
+RUN apt-get update && apt-get install -y python3-pip wget
+
+# Download PostgreSQL JDBC driver
+RUN wget https://jdbc.postgresql.org/download/postgresql-42.2.18.jar -P /opt/
+
+# Install Python packages
+RUN pip3 install kafka-python pandas requests psycopg2-binary
+
+# Create app directory
+WORKDIR /app
+
+# Copy app code from context during build
+COPY . /app

@@ -1,0 +1,13 @@
+FROM python:3.10-slim
+
+# Install dependencies
+RUN apt-get update && apt-get install -y build-essential libpq-dev
+
+# Install Python packages
+RUN pip install streamlit pandas psycopg2-binary
+
+# Create app folder
+WORKDIR /app
+
+# Copy code (assumes ../dashboard is mapped in Docker Compose)
+COPY . /app
